@@ -5,7 +5,7 @@ add_filter('piklist_admin_pages', 'skb_theme_setting_pages');
 function skb_theme_setting_pages( $pages ) {
 	
 	$pages[] = array(
-		'page_title' => __( 'SKB Theme Settings' ),
+		'page_title' => __( 'Settings' ),
 		'menu_title' => __( 'Settings', 'piklist' ),
 		'sub_menu' => 'themes.php',
 		'capability' => 'manage_options',

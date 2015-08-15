@@ -25,6 +25,15 @@ add_action( 'init', 'skb_ninja_forms_check' );
 add_action( 'init', 'skb_ninja_forms_submitted' );
 add_action( 'init', 'skb_ninja_forms_completed' );
 
+add_filter( 'ninja_forms_submission_pdf_name', 'skb_pdf_name', 20, 2 );
+
+add_filter( 'ninja_forms_field', 'adjust_ninja_forms_field', 15, 2 );
+add_filter( 'ninja_forms_field_wrap_class', 'add_custom_ninja_forms_field_wrap_class', 10, 2 );
+
+add_action( 'ninja_forms_display_before_field', 'insert_ninja_forms_display_before_field', 10, 2 );
+add_action( 'ninja_forms_display_after_field', 'insert_ninja_forms_display_after_field', 10, 2 );
+
+
 // Move responses down to after the form so user can easily see them when submitting
 function skb_move_ninja_forms_messages() {
 
@@ -124,15 +133,51 @@ function skb_form_submitted() {
 
 	$form_id = $ninja_forms_processing->get_form_ID();
 
-	if ( $form_id != '43' ) {
+	switch ($form_id) {
+
+		case 2:
+
+			// Individual
+
+			$user_id = get_current_user_id();
+			$user_meta = array_map( function( $a ) { return $a[0]; }, get_user_meta( $user_id ) );
 	
-		return;
+			$first_name = $ninja_forms_processing->get_field_value( 18 );
+			$last_name = $ninja_forms_processing->get_field_value( 17 );
+			$phone = $ninja_forms_processing->get_field_value( 26 );
+			$address_1 = $ninja_forms_processing->get_field_value( 19 );
+			$address_2 =  $ninja_forms_processing->get_field_value( 20 );
+			$city = $ninja_forms_processing->get_field_value( 22 );
+			$state = $ninja_forms_processing->get_field_value( 24 );
+			$postal_code = $ninja_forms_processing->get_field_value( 21 );
+			$country = $ninja_forms_processing->get_field_value( 23 );
+			$dob = $ninja_forms_processing->get_field_value( 1021 );
+
+			update_user_meta( $user_id, 'first_name', $first_name, $user_meta['first_name'] );
+			update_user_meta( $user_id, 'last_name', $last_name, $user_meta['last_name'] );
+			update_user_meta( $user_id, 'phone', $phone, $user_meta['phone'] );
+			update_user_meta( $user_id, 'address_1', $address_1, $user_meta['address_1'] );
+			update_user_meta( $user_id, 'address_2', $address_2, $user_meta['address_2'] );
+			update_user_meta( $user_id, 'city', $city, $user_meta['city'] );
+			update_user_meta( $user_id, 'state', $state, $user_meta['state'] );
+			update_user_meta( $user_id, 'postal_code', $postal_code, $user_meta['postal_code'] );
+			update_user_meta( $user_id, 'country', $country, $user_meta['country'] );
+			update_user_meta( $user_id, 'dob', $dob, $user_meta['dob'] );
+			break;
+
+		case 42:
+
+			// We've got an Investor Verification Being Uploaded
+			$user_id = get_current_user_id();
+			update_user_meta( $user_id, 'user_verification', date( 'Y-m-d H:i:s', time() ) );
+			break;
+
+
+		default:
+
+			break;
 	
 	}
-
-	// We've got an Investor Verification Being Uploaded
-	$user_id = get_current_user_id();
-	update_user_meta( $user_id, 'user_verification', date( 'Y-m-d H:i:s', time() ) );
 
 }
 
@@ -144,7 +189,7 @@ function skb_form_completed() {
 	$form_id = $ninja_forms_processing->get_form_ID();
 	$sub_id = $ninja_forms_processing->get_form_setting( 'sub_id' );
 
-	$skb_forms = array( 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
+	$skb_forms = array( 2, 3, 4, 6, 7, 8, 9, 11, 12, 14, 15 );
 
 	if ( ! in_array( $form_id, $skb_forms , true ) || ! is_user_logged_in() ) {
 
@@ -178,10 +223,9 @@ function skb_form_completed() {
 			$email_footer = '';
 
 			// Send to DocuSign to be signed
-			send_to_docusign( $to_name, $to_email, $form_id, $sub_id );
+			// send_to_docusign( $to_name, $to_email, $form_id, $sub_id );
 
-			$redirect_page = $theme_settings['invest_landing'];
-			$redirect = get_permalink( $redirect_page );
+			$redirect_url = get_permalink( $theme_settings['invest_landing'] );
 
 			break;
 
@@ -194,63 +238,28 @@ function skb_form_completed() {
 			$email_body .= do_shortcode( wpautop( $theme_settings['existing_investor_message'] ) );
 			$email_footer = '';
 
-			$redirect_page = $theme_settings['existing_landing'];
-			$redirect = get_permalink( $redirect_page );
+			$redirect_url = get_permalink( $theme_settings['existing_landing'] );
 
 			break;
 
 		default: 
-			// The rest are all AIQs 
-
-			$subject = $theme_settings['aiq_completed_subject'];
-			$email_title = $subject;
-			$email_body = 'Dear ' . $to_name . ',<br><br>';
-			$email_body .= do_shortcode( wpautop( $theme_settings['aiq_completed_message'] ) );
-			$email_footer = '';
-
-			// Send to DocuSign to be signed
+			// The rest are AIQs to send to DocuSign to be signed
 
 			$result = send_to_docusign( $to_name, $to_email, $form_id, $sub_id );
 
 			if ( $result ) {
 
-				wp_redirect( home_url() . '/docusign?url=' . urlencode( $result ) );
-				exit;
-
-			}
-
-			if ( check_user_role( 'registered_investor', $user_id ) ) {
-
-				switch_user_role( 'waiting_investor', $user_id );
-	
-			} elseif ( check_user_role( 'waiting_investor', $user_id  ) ) {
-				
-				$redirect = home_url( '/investments' );
-				wp_redirect( $redirect );
-				exit;
-
-			} elseif ( check_user_role( 'approved_investor', $user_id ) ) {
-
-				$redirect = home_url( '/dashboard' );
-				wp_redirect( $redirect );
-				exit;
+				$redirect_url = home_url( '/docusign?url=' . urlencode( $result ) );
 
 			} else {
 
-				$redirect = home_url( '/' );
-				wp_redirect( $redirect );
-				exit;
+				$redirect_url = home_url( '/docusign-error' );
 
 			}
 
-			// Setup single cron events for each of cooling phases which include emails and lastly a role change to approved
-			wp_schedule_single_event( time() + ( 2 * 24 * 60 * 60 ), 'skb_waiting_investor', array( $user_id, '1') );
-			wp_schedule_single_event( time() + ( 5 * 24 * 60 * 60 ), 'skb_waiting_investor', array( $user_id, '2') );
+			wp_redirect( $redirect_url );
+			exit;
 
-			$redirect_page = $theme_settings['waiting_landing'];
-			$redirect = get_permalink( $redirect_page );
-
-			break;
 	}
 
 	// Reset content-type to avoid conflicts -- http://core.trac.wordpress.org/ticket/23578
@@ -264,8 +273,167 @@ function skb_form_completed() {
 
 	remove_filter( 'wp_mail_content_type', 'set_html_content_type' );
 	
-	wp_redirect( $redirect );
-
+	wp_redirect( $redirect_url );
 	exit;
+
+}
+
+
+function skb_pdf_name( $name, $sub_id ) { 
+
+	$name = 'skbincrowd-doc_' . $sub_id; 
+	return $name; 
+
+}
+
+function adjust_ninja_forms_field( $data, $field_id ){
+
+  // Fields we don't want to mess with
+  if ( in_array( $field_id, array( '28', '43', '44', '45', '46', '47', '48', '50', '51', '53', '55', '56', '58', '59', '60', '62', '63', '64', '65', '67', '68', '61', '73', '98', '121', '122', '123', '125', '126', '127', '130', '131', '132', '133', '136', '141', '142', '143', '145', '150', '173', '367', '915', '916', '917', '924', '925', '926', '941', '943', '968', '969', '974', '1113', '1595', '1596', '1867', '2123', '2124', '2125', '2126', '2127', '2128', '2130' ) ) ) {
+  	return $data;	
+  }
+
+  $data['class'] .= ' form-control';
+
+  // Prepopulate certain fields
+  if ( in_array( $field_id, array( '1013', '1021', '101', '103', '104', '105', '106', '107', '108', '109' ) ) ) {
+
+	$user_id = get_current_user_id();
+	$user_meta = array_map( function( $a ) { return $a[0]; }, get_user_meta( $user_id ) );
+
+	$first_name = $user_meta['first_name'];
+	$last_name = $user_meta['last_name'];
+	$phone = $user_meta['phone'];
+	$address_1 = $user_meta['address_1'];
+	$address_2 = $user_meta['address_2'];
+	$city = $user_meta['city'];
+	$state = $user_meta['state'];
+	$postal_code = $user_meta['postal_code'];
+	$country = $user_meta['country'];
+	$dob = $user_meta['dob'];
+
+	// Address 1
+	if ( in_array( $field_id, array( '1013', '1021' ) ) ) {
+
+	    $data['default_value'] = $dob;
+
+	}
+
+
+	// Address 1
+	if ( in_array( $field_id, array( '103' ) ) ) {
+
+	    $data['default_value'] = $address_1;
+
+	}
+
+
+	// Address 2
+	if ( in_array( $field_id, array( '104' ) ) ) {
+
+	    $data['default_value'] = $address_2;
+
+	}
+
+
+	// Phone
+	if ( in_array( $field_id, array( '109' ) ) ) {
+
+	    $data['default_value'] = $phone;
+
+	}
+
+	// City
+	if ( in_array( $field_id, array( '106' ) ) ) {
+
+	    $data['default_value'] = $city;
+
+	}
+
+	// State
+	if ( in_array( $field_id, array( '107' ) ) ) {
+
+	    $data['default_value'] = $state;
+
+	}
+
+	// Zip
+	if ( in_array( $field_id, array( '105' ) ) ) {
+
+	    $data['default_value'] = $postal_code;
+
+	}
+
+	// Country
+	if ( in_array( $field_id, array( '108' ) ) ) {
+
+	    $data['default_value'] = $country;
+
+	}
+
+
+  }
+
+
+  return $data;
+}
+
+
+function add_custom_ninja_forms_field_wrap_class( $field_wrap_class, $field_id ) {
+
+  // Fields we don't want to mess with
+  if ( in_array( $field_id, array( '74' ) ) ) {
+  	return $field_wrap_class;	
+  }
+
+  $field_wrap_class .= ' form-group col-xs-12';
+  
+  if ( in_array( $field_id, array( '19', '20', '103', '104', '157', '944', '945', '996', '997', '1002', '1003', '1010', '1266', '1016', '1038', '1039', '1044', '1114', '1115', '1226', '1264', '1265', '2127' ) ) ) {
+  
+  	$field_wrap_class .= ' col-md-6';
+  
+  } elseif ( in_array( $field_id, array( '29', '30', '33', '1023', '1857', '1858', '1859', '1860' ) ) ) {
+
+	$field_wrap_class .= ' col-md-5'; 
+
+  } elseif ( in_array( $field_id, array( '17', '18', '100', '101', '1224', '1225', '1261', '1262', '1855', '1592', '1593', '1798' ) ) ) {
+
+	$field_wrap_class .= ' col-md-4'; 
+
+  } elseif ( in_array( $field_id, array( '21', '22', '23', '24', '26', '27', '105', '106', '107', '108', '109', '110', '946', '947', '948', '949', '965', '998', '999', '1000', '1001', '1005', '1006', '1007', '1116', '1117', '1118', '1119', '1208', '1209', '1040', '1041', '1042', '1043', '1196' ) ) ) {
+  
+  	$field_wrap_class .= ' col-md-3';
+
+  } elseif ( in_array( $field_id, array( '28', '367', '941', '1013', '1021', '1594', '1595', '1856' ) ) ) {
+  
+  	$field_wrap_class .= ' col-md-2';
+ 
+  }
+
+  return $field_wrap_class;
+
+}
+
+
+function insert_ninja_forms_display_before_field( $field_id, $data ) {
+
+  // Fields we want to drop something in before
+  if ( in_array( $field_id, array( '18', '34', '58', '67', '116', '121', '126', '131', '142', '157', '2126', '2127', '969', '1596', '2123', '2125' ) ) ) {
+
+  	echo '<div class="row" style="border: 1px solid black; border-radius: 5px; padding: 1em 0; margin: 1em 0;">';
+
+  }
+
+}
+
+
+function insert_ninja_forms_display_after_field( $field_id, $data ) {
+
+  // Fields we want to drop something in after
+  if ( in_array( $field_id, array( '33', '50', '56', '66', '68', '139', '143', '949', '173', '110', '1266', '1119', '1226', '1860', '1868', '1867' ) ) ) {
+
+ 	echo '</div>';
+  	
+  }
 
 }

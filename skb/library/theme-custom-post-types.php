@@ -29,11 +29,10 @@ function skb_post_types( $post_types ) {
 			),
 	);
 
-
 	$post_types['investment_update'] = array(
 		'labels' => piklist('post_type_labels', 'Investment Updates'),
-		'public' => true,
-		'has_archive' => false,
+		'public' => false,
+		'show_ui' => true,
 		'menu_icon' => 'dashicons-analytics',
 		'rewrite' => array(
 			'slug' => 'investment-updates'
@@ -50,13 +49,49 @@ function skb_post_types( $post_types ) {
 			),
 	);
 
+	$post_types['investment_deal'] = array(
+		'labels' => piklist('post_type_labels', 'Investment Deals'),
+		'public' => false,
+		'show_ui' => true,
+		'menu_icon' => 'dashicons-portfolio',
+		'rewrite' => array(
+			'slug' => 'investment-deals'
+			),
+		'supports' => array(
+			),
+		'hide_meta_box' => array(
+			'slug',
+			'author',
+			'revisions',
+			'comments',
+			'commentstatus'
+			),
+	);
+
+	$post_types['investor_message'] = array(
+		'labels' => piklist('post_type_labels', 'Investor Messages'),
+		'public' => false,
+		'show_ui' => true,
+		'menu_icon' => 'dashicons-email-alt',
+		'rewrite' => array(
+			'slug' => 'investment-message'
+			),
+		'supports' => array(
+			),
+		'hide_meta_box' => array(
+			'slug',
+			'author',
+			'revisions',
+			'comments',
+			'commentstatus'
+			),
+	);
 
 	$post_types['slide'] = array(
 		'labels' => piklist('post_type_labels', 'Slides'),
 		'title' => __('Enter Slide Title'),
-		'public' => true,
-		'has_archive' => false,
-		'exclude_from_search' => true,		
+		'public' => false,
+		'show_ui' => true,	
 		'menu_icon' => 'dashicons-images-alt',
 		'rewrite' => array(
 			'slug' => 'slides'
@@ -78,7 +113,7 @@ function skb_post_types( $post_types ) {
 		'labels' => piklist('post_type_labels', 'Team Members'),
 		'title' => __('Enter Full Name'),
 		'public' => true,
-		'has_archive' => true,		
+		'has_archive' => true,
 		'exclude_from_search' => true,
 		'menu_icon' => 'dashicons-businessman',
 		'rewrite' => array(
@@ -101,7 +136,6 @@ function skb_post_types( $post_types ) {
 		'labels' => piklist('post_type_labels', 'Partners'),
 		'title' => __('Enter Partner Title'),
 		'public' => true,
-		'has_archive' => true,
 		'exclude_from_search' => true,
 		'menu_icon' => 'dashicons-groups',
 		'rewrite' => array(
@@ -123,9 +157,8 @@ function skb_post_types( $post_types ) {
 	$post_types['testimonial'] = array(
 		'labels' => piklist('post_type_labels', 'Testimonials'),
 		'title' => __('Enter Testimonial Source'),
-		'public' => true,
-		'has_archive' => false,
-		'exclude_from_search' => true,
+		'public' => false,
+		'show_ui' => true,
 		'menu_icon' => 'dashicons-editor-quote',
 		'rewrite' => array(
 			'slug' => 'testimonial'

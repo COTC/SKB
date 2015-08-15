@@ -16,7 +16,7 @@ function get_slides( $args ) {
 
 			$query->the_post();
 
-			$slide_content = get_post_meta( get_the_id(), 'slide_content', true );
+			$slide_content = get_post_meta( get_the_id(), 'slide_content', TRUE );
 
 			if ( has_post_thumbnail() ) {
 				$slide_image_src = wp_get_attachment_image_src( get_post_thumbnail_id( get_the_id() ), 'large' );
@@ -42,7 +42,6 @@ function get_slides( $args ) {
 		jQuery(document).ready(function() {
 		  jQuery('.main-slider').flexslider({
 		    animation: "slide",
-		    keyboard: false,
 		    slideshowSpeed: <?php echo $slider_speed; ?>,
 			animationSpeed: 500,
 		  });
@@ -79,7 +78,7 @@ function get_investments( $args ) {
 
 			$investment_title = get_the_title();
 			$investment_permalink = get_the_permalink();
-			$investment_overview = get_post_meta( get_the_id(), 'investment_overview', true );
+			$investment_overview = get_post_meta( get_the_id(), 'investment_overview', TRUE );
 
 			if ( has_post_thumbnail() ) {
 				$investment_image_src = wp_get_attachment_image_src( get_post_thumbnail_id( get_the_id() ), 'thumbnail' );
@@ -171,8 +170,8 @@ function get_testimonials( $args ) {
 		jQuery(document).ready(function() {
 		  jQuery('.testimonials').flexslider({
 		    animation: "fade",
-		    keyboard: false,
-		    controlNav: false,
+		    keyboard: FALSE,
+		    controlNav: FALSE,
 		  });
 		});
 		</script>
@@ -201,7 +200,7 @@ function get_partners( $args ) {
 			$query->the_post();
 
 			$partner_title = get_the_title();
-			// $partner_details = get_post_meta( get_the_id(), 'partner_details', true );
+			// $partner_details = get_post_meta( get_the_id(), 'partner_details', TRUE );
 
 			if ( has_post_thumbnail() ) {
 				$partner_image_src = wp_get_attachment_image_src( get_post_thumbnail_id( get_the_id() ), 'thumbnail' );
@@ -227,11 +226,11 @@ function get_partners( $args ) {
 	wp_reset_postdata();	
 }
 
-function log_in_user( $username, $password, $remember = false ) {
+function log_in_user( $username, $password, $remember = FALSE ) {
 
 	global $user;
 
-	$login_redirect_url = home_url( '/' );
+	$redirect_url = home_url( '/' );
 	
 	$args = array(
 		'user_login' => $username,
@@ -239,7 +238,7 @@ function log_in_user( $username, $password, $remember = false ) {
 		'remember' => $remember,
 		);
 
-	$user = wp_signon( $args, false );
+	$user = wp_signon( $args, FALSE );
 	
 	if ( ! is_wp_error( $user ) ) {
 	
@@ -248,19 +247,18 @@ function log_in_user( $username, $password, $remember = false ) {
 
 		$theme_settings = get_option('skb_theme_settings');
 
-		if ( check_user_role( 'pending_investor', $user->ID ) ) {
+		if ( current_user_can( 'pending_investor' ) ) {
 
 			wp_logout();
-			$redirect_page = $theme_settings['unconfirmed_landing'];
-			$login_redirect_url = get_permalink( $redirect_page );
+			$redirect_url = get_permalink( $theme_settings['unconfirmed_landing']);
 
-		} elseif ( check_user_role( 'registered_investor', $user->ID ) ) {
+		} elseif ( current_user_can( 'registered_investor' ) ) {
 
-		    $login_redirect_url = home_url( '/aiq-form' );
+		    $redirect_url = home_url( '/aiq-form' );
 
 		}
 
-		wp_redirect( $login_redirect_url );
+		wp_redirect( $redirect_url );
 
 		exit;
 	
@@ -316,7 +314,7 @@ function register_user( $first_name, $last_name, $email, $password ) {
 		add_filter( 'wp_mail_content_type', 'set_html_content_type' );
 
 		ob_start();
-		include( locate_template( 'library/templates/email-basic.php', false, true ) );
+		include( locate_template( 'library/templates/email-basic.php', FALSE, TRUE ) );
 		$message = ob_get_clean();
 
 		wp_mail( $to, $subject, $message, $headers );
@@ -334,7 +332,7 @@ function register_user( $first_name, $last_name, $email, $password ) {
 
 }
 
-function check_user_role( $role, $user_id = null ) {
+/*function check_user_role( $role, $user_id = null ) {
  
     if ( is_numeric( $user_id ) ) {
 
@@ -348,7 +346,7 @@ function check_user_role( $role, $user_id = null ) {
  
     if ( empty( $user ) ) {
 	
-		return false;
+		return FALSE;
  	
  	} else {
 
@@ -356,7 +354,7 @@ function check_user_role( $role, $user_id = null ) {
 
 	}
 
-}
+}*/
 
 function switch_user_role( $role, $user_id = null ) {
 
@@ -382,40 +380,40 @@ function set_html_content_type() {
 
 }
 
-function get_investor_watch_list() {
+function get_following_investments() {
 
-	$investments = get_user_meta( get_current_user_id(), 'watch_list', false );
-	$watch_list = '<ul class="list-group">';
+	$investments = get_user_meta( get_current_user_id(), 'following_investments', FALSE );
+	$html = '<ul class="list-group">';
 
 	if ( empty( $investments ) ) {
 
-		$watch_list .= '<a href="' . home_url( '/investments' ) . '" class="list-group-item"><h4 class="list-group-item-heading">Browse Investments</h4><p class="list-group-item-text">You have no investments on your watch list.</p></a>';
+		$html .= '<a href="' . home_url( '/investments' ) . '" class="list-group-item"><h4 class="list-group-item-heading">Browse Investments</h4><p class="list-group-item-text">You are following 0 investments.</p></a>';
 	
 	} else {
 
 		foreach ( $investments as $investment ) {
 
-			$watch_list .= '<a href="' . get_the_permalink( $investment ) . '" class="list-group-item clearfix">' . get_the_post_thumbnail( $investment, array( 90, 90), array( 'class' => 'pull-left' ) )  . '<h4 class="list-group-item-heading" style="margin-left: 100px;">' . get_the_title( $investment ) . '</h4></p></a>';
+			$html .= '<a href="' . get_the_permalink( $investment ) . '" class="list-group-item clearfix">' . get_the_post_thumbnail( $investment, array( 90, 90), array( 'class' => 'pull-left' ) )  . '<h4 class="list-group-item-heading" style="margin-left: 100px;">' . get_the_title( $investment ) . '</h4></p></a>';
 
 	  	}
 
 	}
 
-	$watch_list .= '</ul>';
+	$html .= '</ul>';
 
-	return $watch_list;
+	return $html;
 
 }
 
-function get_investment_watch_list() {
+function get_investment_followers() {
 
-	$investors = get_post_meta( get_the_id(), '_watch_list', false );
-	$watch_list = '<div class="well"><p><strong>Current Watchers: </strong>';
-	$watchers = array();
+	$investors = get_post_meta( get_the_id(), '_investment_followers', FALSE );
+	$html = '<div class="alert alert-info"><p><strong>Followed By: </strong>';
+	$followers = array();
 
 	if ( empty( $investors ) ) {
 
-		$watch_list .= 'No investors are watching this investment.';
+		$html .= 'No investors are following this investment.';
 	
 	} else {
 
@@ -423,31 +421,31 @@ function get_investment_watch_list() {
 
 			$user = get_user_by( 'id', (int) $investor );
 			if ( $user ) {
-				$watchers[] = $user->first_name . ' ' . $user->last_name;
+				$followers[] = $user->first_name . ' ' . $user->last_name;
 			}
 
 	  	}
 
-	  	$watch_list .= implode( ', ', $watchers );
+	  	$html .= implode( ', ', $followers );
 
 	}
 
-	$watch_list .= '</p><p>* Only users with editor access can see the watcher list.</p>';
-	$watch_list .= '</div>';
+	$html .= '</p><p>* Only site Adminstrators can see this while WP_DEBUG is TRUE.</p>';
+	$html .= '</div>';
 
-	return $watch_list;
+	return $html;
 
 }
 
-function get_investment_read_list() {
+function get_investment_readers() {
 
-	$investors = get_post_meta( get_the_id(), '_read_list', false );
-	$read_list = '<div class="well"><p><strong>Investors who read this deal: </strong>';
+	$investors = get_post_meta( get_the_id(), '_read_investment', FALSE );
+	$html = '<div class="alert alert-info"><p><strong>Read By: </strong>';
 	$readers = array();
 
 	if ( empty( $investors ) ) {
 
-		$read_list .= 'No investors have read this investment.';
+		$html .= 'No investors have read this investment.';
 	
 	} else {
 
@@ -460,14 +458,14 @@ function get_investment_read_list() {
 
 	  	}
 
-	  	$read_list .= implode( ', ', $readers );
+	  	$html .= implode( ', ', $readers );
 
 	}
 
-	$read_list .= '</p><p>* Only users with editor access can see the read list.</p>';
-	$read_list .= '</div>';
+	$html .= '</p><p>* Only site Adminstrators can see this while WP_DEBUG is TRUE.</p>';
+	$html .= '</div>';
 
-	return $read_list;
+	return $html;
 
 }
 
@@ -500,8 +498,8 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 	// $url = "https://demo.docusign.net/restapi/v2/login_information";
 	$url = $theme_settings['docusign_api_url'];
 	$curl = curl_init($url);
-	curl_setopt($curl, CURLOPT_HEADER, false);
-	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($curl, CURLOPT_HEADER, FALSE);
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($curl, CURLOPT_HTTPHEADER, array("X-DocuSign-Authentication: $header"));
 
 	$json_response = curl_exec($curl);
@@ -516,14 +514,14 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 	
 	}
 
-	$response = json_decode($json_response, true);
+	$response = json_decode($json_response, TRUE);
 	$accountId = $response["loginAccounts"][0]["accountId"];
 	$baseUrl = $response["loginAccounts"][0]["baseUrl"];
 	curl_close($curl);
 
 	$clientUserId = 'skb-' . get_current_user_id() . '-' . time();
 
-	$embedded = true;
+	$embedded = TRUE;
 	
 	switch ( $form_id ) {
 
@@ -540,7 +538,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Individual Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -552,7 +550,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 
 		case 3: // Invest in this Deal
 
-			$embedded = false;
+			$embedded = FALSE;
 
 			switch ( $ninja_forms_processing->get_field_value( 831 ) ) {
 
@@ -569,7 +567,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Trustees Signature :\",
 						    	\"anchorXOffset\":\"1.5\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -593,7 +591,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 							    	\"anchorString\":\"Co-Trustee Signature :\",
 							    	\"anchorXOffset\":\"1.5\",
 							    	\"anchorYOffset\":\"0\",
-							    	\"anchorIgnoreIfNotPresent\":\"false\",
+							    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 							    	\"anchorUnits\":\"inches\",
 							    	\"documentId\":\"1\",
 					            	}
@@ -617,7 +615,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Individual Signature :\",
 						    	\"anchorXOffset\":\"1.5\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -638,7 +636,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Joint Tenant Signature :\",
 						    	\"anchorXOffset\":\"1.75\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -660,7 +658,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Individual Signature :\",
 						    	\"anchorXOffset\":\"1.5\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -681,7 +679,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Tenant in Common Signature :\",
 						    	\"anchorXOffset\":\"2\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -703,7 +701,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Individual Signature :\",
 						    	\"anchorXOffset\":\"1.5\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -724,7 +722,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Spouse Signature :\",
 						    	\"anchorXOffset\":\"1.25\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -746,7 +744,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Beneficial Signature :\",
 						    	\"anchorXOffset\":\"1.5\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -774,7 +772,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 							    	\"anchorString\":\"Authorized Officer Signature :\",
 							    	\"anchorXOffset\":\"2\",
 							    	\"anchorYOffset\":\"0\",
-							    	\"anchorIgnoreIfNotPresent\":\"false\",
+							    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 							    	\"anchorUnits\":\"inches\",
 							    	\"documentId\":\"1\",
 					            	}
@@ -794,7 +792,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 							    	\"anchorString\":\"General Partner Signature :\",
 							    	\"anchorXOffset\":\"2\",
 							    	\"anchorYOffset\":\"0\",
-							    	\"anchorIgnoreIfNotPresent\":\"false\",
+							    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 							    	\"anchorUnits\":\"inches\",
 							    	\"documentId\":\"1\",
 					            	}
@@ -821,7 +819,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Authorized Signature :\",
 						    	\"anchorXOffset\":\"2.25\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -844,7 +842,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 							    	\"anchorString\":\"Authorized Signature 2 :\",
 							    	\"anchorXOffset\":\"2.25\",
 							    	\"anchorYOffset\":\"0\",
-							    	\"anchorIgnoreIfNotPresent\":\"false\",
+							    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 							    	\"anchorUnits\":\"inches\",
 							    	\"documentId\":\"1\",
 					            	}
@@ -872,7 +870,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Authorized Signature :\",
 						    	\"anchorXOffset\":\"2.25\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -895,7 +893,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 							    	\"anchorString\":\"Authorized Signature 2 :\",
 							    	\"anchorXOffset\":\"2.25\",
 							    	\"anchorYOffset\":\"0\",
-							    	\"anchorIgnoreIfNotPresent\":\"false\",
+							    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 							    	\"anchorUnits\":\"inches\",
 							    	\"documentId\":\"1\",
 					            	}
@@ -920,7 +918,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 						    	\"anchorString\":\"Individual Signature :\",
 						    	\"anchorXOffset\":\"1.5\",
 						    	\"anchorYOffset\":\"0\",
-						    	\"anchorIgnoreIfNotPresent\":\"false\",
+						    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 						    	\"anchorUnits\":\"inches\",
 						    	\"documentId\":\"1\",
 				            	}
@@ -948,7 +946,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Trustees Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -972,7 +970,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 					    	\"anchorString\":\"Co-Trustee Signature :\",
 					    	\"anchorXOffset\":\"1.5\",
 					    	\"anchorYOffset\":\"0\",
-					    	\"anchorIgnoreIfNotPresent\":\"false\",
+					    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 					    	\"anchorUnits\":\"inches\",
 					    	\"documentId\":\"1\",
 			            	}
@@ -997,7 +995,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Individual Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1018,7 +1016,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Joint Tenant Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1041,7 +1039,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Individual Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1062,7 +1060,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Tenant in Common Signature :\",
 				    	\"anchorXOffset\":\"2\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1085,7 +1083,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Individual Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1106,7 +1104,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Spouse Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1129,7 +1127,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Beneficial Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1158,7 +1156,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 					    	\"anchorString\":\"Authorized Officer Signature :\",
 					    	\"anchorXOffset\":\"2\",
 					    	\"anchorYOffset\":\"0\",
-					    	\"anchorIgnoreIfNotPresent\":\"false\",
+					    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 					    	\"anchorUnits\":\"inches\",
 					    	\"documentId\":\"1\",
 			            	}
@@ -1182,7 +1180,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 					    	\"anchorString\":\"General Partner Signature :\",
 					    	\"anchorXOffset\":\"2\",
 					    	\"anchorYOffset\":\"0\",
-					    	\"anchorIgnoreIfNotPresent\":\"false\",
+					    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 					    	\"anchorUnits\":\"inches\",
 					    	\"documentId\":\"1\",
 			            	}
@@ -1207,7 +1205,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Authorized Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1233,7 +1231,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Authorized Officer Signature :\",
 				    	\"anchorXOffset\":\"2\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1256,7 +1254,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 				    	\"anchorString\":\"Signature :\",
 				    	\"anchorXOffset\":\"1.5\",
 				    	\"anchorYOffset\":\"0\",
-				    	\"anchorIgnoreIfNotPresent\":\"false\",
+				    	\"anchorIgnoreIfNotPresent\":\"FALSE\",
 				    	\"anchorUnits\":\"inches\",
 				    	\"documentId\":\"1\",
 		            	}
@@ -1305,8 +1303,8 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 
 	// *** append "/envelopes" to baseUrl and as signature request endpoint
 	$curl = curl_init($baseUrl . "/envelopes" );
-	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($curl, CURLOPT_POST, true);
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+	curl_setopt($curl, CURLOPT_POST, TRUE);
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $requestBody);                                                                  
 	curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
 		'Content-Type: multipart/form-data;boundary=myboundary',
@@ -1329,7 +1327,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 		
 	} else {
 
-		$response = json_decode($json_response, true);
+		$response = json_decode($json_response, TRUE);
 		$envelopeId = $response["envelopeId"];
 
 		//--- add results to form submission
@@ -1352,8 +1350,8 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 		
 		$data_string = json_encode($data);    
 		$curl = curl_init($baseUrl . "/envelopes/$envelopeId/views/recipient" );
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);                                                                  
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
 			'Content-Type: application/json',                                                                                
@@ -1369,7 +1367,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 			exit(-1);
 		}
 		
-		$response = json_decode($json_response, true);
+		$response = json_decode($json_response, TRUE);
 		$url = $response["url"];
 		
 		// Docusign embedded is at $url 
@@ -1379,7 +1377,7 @@ function send_to_docusign( $to_name, $to_email, $form_id, $sub_id ) {
 
 	} else {
 
-		return false;
+		return FALSE;
 
 	}
 
@@ -1389,11 +1387,11 @@ function is_ipad() {
 
 	if ( ! empty( $_SERVER['HTTP_USER_AGENT'] ) && strpos( $_SERVER['HTTP_USER_AGENT'], 'iPad' ) ) {
 
-		return true;
+		return TRUE;
 	
 	} else {
 
-		return false;
+		return FALSE;
 
 	}
 
@@ -1401,11 +1399,11 @@ function is_ipad() {
 
 function add_debug_log_item( $log )  {
 
-    if ( true === WP_DEBUG ) {
+    if ( TRUE === WP_DEBUG ) {
 
         if ( is_array( $log ) || is_object( $log ) ) {
 
-            error_log( print_r( $log, true ) );
+            error_log( print_r( $log, TRUE ) );
 
         } else {
 

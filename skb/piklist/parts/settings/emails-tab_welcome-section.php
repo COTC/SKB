@@ -1,6 +1,6 @@
 <?php
 /*
-Title: Welcome Registered Investor
+Title: Welcome Approved Investor
 Setting: skb_theme_settings
 Tab: Emails
 Order: 60

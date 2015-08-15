@@ -128,13 +128,7 @@ if ( ! is_user_logged_in() ) {
 						</div>
 					</form>
 
-				</div>
-
-		    	<div class="col-xs-12 col-sm-5">
-
-		    		<?php // echo do_shortcode( '[avatar_upload]' ); ?>
-
-		    	</div>				
+				</div>		
 
 			</div>	
 
@@ -146,7 +140,7 @@ if ( ! is_user_logged_in() ) {
 		        <?php 
 
 				$args = array(
-					'user_id'   => $user_id,
+					'user_id'   => $user->id,
 				);
 
 				// This will return an array of sub objects.
@@ -263,6 +257,17 @@ if ( ! is_user_logged_in() ) {
 				</div>
 
 			</div>
+
+
+			<div role="tabpanel" class="tab-pane fade" id="photo">
+
+			    <div class="col-xs-12">
+
+		    		<?php echo do_shortcode( '[avatar_upload]' ); ?>
+
+		    	</div>		
+
+		    </div>			
 
 
 			<div role="tabpanel" class="tab-pane fade" id="verification">

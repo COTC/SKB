@@ -62,7 +62,7 @@ foreach ( $subs as $sub ) {
   </label>
 </div>
 
-<?php } ?>
+<?php }  ?>
 
 <div class="radio">
   <label data-toggle="tooltip" data-placement="right" title="A legal arrangement in which an individual (the trustor) gives fiduciary control of property to a person or institution (the trustee) for the benefit of beneficiaries of the trust.">

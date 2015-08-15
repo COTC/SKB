@@ -1,39 +1,39 @@
 jQuery(document).ready( function (){
 
-	jQuery('#add_to_watch_list').on('click', function(){
+	jQuery('#follow_investment').on('click', function(){
 		jQuery.post(
 		    Investment.ajaxurl, {
-		        action : 'add_to_watch_list',
+		        action : 'follow_investment',
 		        investment_id : Investment.id,
-		        watchlist_nonce : Investment.watchlist_nonce,
+		        follow_nonce : Investment.follow_nonce,
 		    }, function(response) {
-		        jQuery("#ajax_watchlist_response").html(response);
-		        jQuery('#alert-watchlist').removeClass('hide');
-		        jQuery('#add_to_watch_list').addClass('disabled');
+		        jQuery("#ajax_follow_response").html(response);
+		        jQuery('#alert-follow').removeClass('hide');
+		        jQuery('#follow_investment').addClass('disabled');
 		    }
 		);
 	});
 
-	jQuery('#remove_from_watch_list').on('click', function(){
+	jQuery('#unfollow_investment').on('click', function(){
 		jQuery.post(
 		    Investment.ajaxurl, {
-		        action : 'remove_from_watch_list',
+		        action : 'unfollow_investment',
 		        investment_id : Investment.id,
-		        watchlist_nonce : Investment.watchlist_nonce,
+		        unfollow_nonce : Investment.unfollow_nonce,
 		    }, function(response) {
-		        jQuery("#ajax_watchlist_response").html(response);
-		        jQuery('#alert-watchlist').removeClass('hide');
-		        jQuery('#remove_from_watch_list').addClass('disabled');
+		        jQuery("#ajax_follow_response").html(response);
+		        jQuery('#alert-follow').removeClass('hide');
+		        jQuery('#unfollow_investment').addClass('disabled');
 		    }
 		);
 	});
 
-	jQuery('#read_the_offering').on('click', function(){
+	jQuery('#read_investment').on('click', function(){
 		jQuery.post(
 		    Investment.ajaxurl, {
-		        action : 'mark_offering_read',
+		        action : 'mark_investment_read',
 		        investment_id : Investment.id,
-		        readlist_nonce : Investment.readlist_nonce,
+		        read_nonce : Investment.read_nonce,
 		    }, function(response) {
 				jQuery('#invest_in_this_deal').removeClass('disabled');
 		    }

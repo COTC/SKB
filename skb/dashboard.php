@@ -294,8 +294,8 @@ setlocale(LC_MONETARY, 'en_US');
 				</div>
 		    	<div class="col-xs-12 col-md-4">
 		    		<div class="well">
-		    			<h2>Watch List</h2>
-		    			<?php echo get_investor_watch_list(); ?>
+		    			<h2>Following</h2>
+		    			<?php echo get_following_investments(); ?>
 		    		</div>
 		    	</div>
 
@@ -486,7 +486,38 @@ setlocale(LC_MONETARY, 'en_US');
 
 					<?php 
 
-			        $messages = get_user_meta( $user_id, 'investor_messages', TRUE );
+					$messages = false;
+					$i = 0;
+					$args = array(
+						'post_type' => 'investor_message',
+						'posts_per_page' => -1,
+						'meta_key'     => 'investor_message_user',
+						'meta_value'   => $user_id,
+						'meta_compare' => '=',
+					);
+
+					$query = new WP_Query( $args );
+
+					if ( $query->have_posts() ) {
+
+						$messages = true;
+						while ( $query->have_posts() ) { 
+
+							$query->the_post();
+
+							$investor_messages["investor_message_postid"][$i] = get_the_id();
+							$investor_messages["investor_message_date"][$i] = get_the_date();
+							$investor_messages["investor_message_investment"][$i] = get_the_title( get_post_meta( get_the_id(), 'investor_message_investment', TRUE ) );
+							$investor_messages["investor_message_subject"][$i] = get_post_meta( get_the_id(), 'investor_message_subject', TRUE );
+							$investor_messages["investor_message_content"][$i] = get_post_meta( get_the_id(), 'investor_message_content', TRUE );
+							$investor_messages["investor_message_status"][$i] = get_post_meta( get_the_id(), 'investor_message_status', TRUE );
+
+							$i++;
+						}
+
+					}
+
+					wp_reset_postdata();
 
 			        if ( $messages ) { ?>
 
@@ -504,7 +535,7 @@ setlocale(LC_MONETARY, 'en_US');
 								</tr>
 					        </thead>
 					        <tbody>
-						        <?php piklist( get_stylesheet_directory() . '/library/templates/piklist-investor_messages.php', array('data' => $messages, 'loop' => 'data')); ?>
+						        <?php piklist( get_stylesheet_directory() . '/library/templates/piklist-investor_messages.php', array('data' => $investor_messages, 'loop' => 'data')); ?>
 					        </tbody>
 				      	</table>
 

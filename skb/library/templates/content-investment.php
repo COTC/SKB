@@ -110,34 +110,37 @@ if ( have_posts() ) {
 						<br>
 						<div class="row">
 							<div class="col-xs-12 col-sm-7 col-md-8">
-								<div class="alert alert-success alert-dismissible fade in hide" id="alert-watchlist" role="alert">
+								<div class="alert alert-success alert-dismissible fade in hide" id="alert-follow" role="alert">
 									<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-									<div id="ajax_watchlist_response"></div>
+									<div id="ajax_follow_response"></div>
 								</div>
 								<ul class="nav nav-pills">
 									<?php 
 									if ( is_user_logged_in() ) {
-										$watch_list = get_user_meta( get_current_user_id(), 'watch_list', false );
-										if ( ! in_array( get_the_id(), $watch_list ) ) { 
+										$following_investments = get_user_meta( get_current_user_id(), 'following_investments', false );
+										if ( ! in_array( get_the_id(), $following_investments ) ) { 
 										?>
 										<li role="presentation">
-											<button type="button" id="add_to_watch_list" class="btn btn-primary">
-											 	<span class="dashicons dashicons-plus-alt"></span>&nbsp; Add to Watchlist
+											<button type="button" id="follow_investment" class="btn btn-primary">
+											 	<span class="dashicons dashicons-plus-alt"></span>&nbsp; Follow Investment
 											</button>
 										</li>
 										<?php } else { ?>
 										<li role="presentation">
-											<button type="button" id="remove_from_watch_list" class="btn btn-primary">
-											 	<span class="dashicons dashicons-dismiss"></span>&nbsp; Remove from Watchlist
+											<button type="button" id="unfollow_investment" class="btn btn-primary">
+											 	<span class="dashicons dashicons-dismiss"></span>&nbsp; Unfollow Investment
 											</button>
 										</li>
 										<?php } ?>
+										<?php
+										if ( get_post_meta( get_the_id(), 'investment_offering', TRUE ) ) { ?>
 										<li role="presentation">
-											<button type="button" id="read_the_offering" class="btn btn-primary">
+											<button type="button" id="read_investment" class="btn btn-primary">
 												<span class="dashicons dashicons-analytics"></span>&nbsp; Information Memorandum
 											</button>
 										</li>
 										<?php 
+										}
 										$read_list = get_user_meta( get_current_user_id(), 'read_list', false );
 										if ( ! in_array( get_the_id(), $read_list ) ) { 
 										?>
@@ -156,7 +159,7 @@ if ( have_posts() ) {
 									} else { ?>
 										<li role="presentation">
 											<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#RegisterModal">
-												<span class="dashicons dashicons-plus-alt"></span>&nbsp; Add to Watchlist
+												<span class="dashicons dashicons-plus-alt"></span>&nbsp; Follow Investment
 											</button>
 										</li>
 										<li role="presentation">
@@ -190,27 +193,28 @@ if ( have_posts() ) {
 						<br>
 						<div class="row">
 							<div class="col-xs-12 col-md-8 col-offset-md-2">
-								<div class="alert alert-success alert-dismissible fade in hide" id="alert-watchlist" role="alert">
+								<div class="alert alert-success alert-dismissible fade in hide" id="alert-follow" role="alert">
 									<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 									<div id="ajax_watchlist_response"></div>
 								</div>
 								<?php 
 								if ( is_user_logged_in() ) {
-									$watch_list = get_user_meta( get_current_user_id(), 'watch_list', false );
-									if ( ! in_array( get_the_id(), $watch_list ) ) { 
+									$following_investments = get_user_meta( get_current_user_id(), 'following_investments', false );
+									if ( ! in_array( get_the_id(), $following_investments ) ) { 
 									?>
-									<button type="button" id="add_to_watch_list" class="btn btn-primary">
-									 	<span class="dashicons dashicons-plus-alt"></span>Add to Watchlist
+									<button type="button" id="follow_investment" class="btn btn-primary">
+									 	<span class="dashicons dashicons-plus-alt"></span>Follow Investment
 									</button>
 									<?php } else { ?>
-									<button type="button" id="remove_from_watch_list" class="btn btn-primary">
-									 	<span class="dashicons dashicons-dismiss"></span> Remove from Watchlist
+									<button type="button" id="unfollow_invesment" class="btn btn-primary">
+									 	<span class="dashicons dashicons-dismiss"></span> Unfollow Investment
 									</button>
 									<?php }
 
 								} else { ?>
+
 									<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#RegisterModal">
-										<span class="dashicons dashicons-plus-alt"></span>&nbsp; Add to Watchlist
+										<span class="dashicons dashicons-plus-alt"></span>&nbsp; Follow Investment
 									</button>
 								<?php } ?>
 
@@ -250,15 +254,15 @@ if ( have_posts() ) {
 
 }
 
-if ( has_term( array( 'active', 'coming' ), 'investment_category' ) && current_user_can( 'edit_posts' ) ) { ?>
+if ( TRUE === WP_DEBUG && current_user_can( 'administrator' ) ) { ?>
 
 	<br>
 	<div class="row">
 		<div class="col-xs-12 col-md-6">
-			<?php echo get_investment_watch_list(); ?>
+			<?php echo get_investment_followers(); ?>
 		</div>
 		<div class="col-xs-12 col-md-6">
-			<?php echo get_investment_read_list(); ?>
+			<?php echo get_investment_readers(); ?>
 		</div>
 	</div>
 

@@ -9,6 +9,9 @@ add_shortcode( 'investor_lastname', 'investor_lastname' );
 add_shortcode( 'investor_fullname', 'investor_fullname' );
 add_shortcode( 'show_logged_in', 'show_logged_in' );
 add_shortcode( 'hide_logged_in', 'hide_logged_in' );
+add_shortcode( 'investor_dashboard_link', 'investor_dashboard_link' );
+add_shortcode( 'website_home_url', 'website_home_url' );
+
 
 function skb_login_form() {
 
@@ -103,4 +106,17 @@ function hide_logged_in( $atts, $content = '' ) {
 
 	}
 	
+}
+
+function investor_dashboard_link() {
+
+	return '<a href="' . home_url( '/dashboard' ) . '">SKB IN CROWD Investor Dashboard</a>';
+
+}
+
+
+function website_home_url() {
+
+	return '<a href="' . home_url( '/' ) . '">SKB IN CROWD</a>';
+
 }

@@ -1,6 +1,6 @@
 <?php
 /*
-Title: Confirm Registration
+Title: Pending Investor Confirmation
 Setting: skb_theme_settings
 Tab: Emails
 Order: 20
@@ -10,7 +10,7 @@ piklist( 'field', array(
 		'type' => 'text',
 		'field' => 'confirm_registration_subject',
 		'label' => __( 'Subject' ),
-		'description' => __( 'Subject of registration email.', 'piklist' ),
+		'description' => __( 'Subject of email to confirm registration.', 'piklist' ),
 		'attributes' => array(
 			'class' => 'regular-text'
 		)
